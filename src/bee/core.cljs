@@ -42,9 +42,8 @@
   [tiles]
   (let [style (inc (rand-int 6))
         tiles (apply vector tiles)
-        anchor (first tiles)
-        ax (:x anchor)
-        ay (:y anchor)]
+        {ax :x ay :y} (first tiles)]
+    (print ax ay)
     {:pos {:x 600 :y 0}
      :grid-pos nil
      :tiles (doall
@@ -102,7 +101,7 @@
         lines (js->clj (.split stripped "\n"))
         tiles (flatten (map (fn [y line]
                   (map (fn [x ch]
-                      {:tag ch :x x :y y})
+                      {:tag ch :x (+ x (quot (+ y 1) 2)) :y y})
                     (range) line))
                 (range) lines))
         parts (reduce (fn [m [k v]] (assoc m k v)) nil
@@ -140,11 +139,8 @@
 
 (defn tilepos [pos]
   (let [{tx :x ty :y} pos
-        odd (mod ty 2)
-        x (* (+ tx (/ odd 2)))
-        y (* ty (/ 3 4))
-        x (* (:x tile-dim) x)
-        y (* (:y tile-dim) y)]
+        x (* (:x tile-dim) (- tx (/ ty 2)))
+        y (* (/ 3 4) (:y tile-dim) ty)]
     {:x x :y y}))
 
 (defn nearest-grid [state pos]
@@ -286,7 +282,7 @@
 (defn render-tile [tile tag]
   (let [{x :x y :y} (tilepos (:pos tile))
         style (get tile :style 0)
-        mapname (str "tile" tag "at" x "x" y)]
+        mapname (str "tile" tag "at" (:x (:pos tile)) "x" (:y (:pos tile)))]
     [:div.tile
        {:style {:left x :top y}}
        [:map {:name mapname}
@@ -550,12 +546,12 @@
        [:div.game
         {:id "gamearea" :style {:transform "scaled(0.5)"}}
         [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
-        [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}
-                 :onClick #(swap! game-state pause-game)}]
-        [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}
-                 :onClick #(swap! game-state reset-game)}]
-        [:input {:type "button" :value "SHUFF" :style {:height 100 :width 100}
-                 :onClick #(swap! game-state shuffle-parts)}]
+;        [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}
+;                 :onClick #(swap! game-state pause-game)}]
+;        [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}
+;                 :onClick #(swap! game-state reset-game)}]
+;        [:input {:type "button" :value "SHUFF" :style {:height 100 :width 100}
+;                 :onClick #(swap! game-state shuffle-parts)}]
         [:h1.title (:title state)]
         [:h4.time (str "Time: " (format-time (:time state)))]
         [:h4 (str "WON: " (:won state))]
@@ -578,7 +574,7 @@
 ;TODO
 ;Scaling
 ;Winner screen
+;Make play nice
 ;Random grid
 ;Random puzzle
 ;Random maze/fixed maze
-;Standalone/refactoring
