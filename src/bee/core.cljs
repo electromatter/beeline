@@ -43,7 +43,6 @@
   (let [style (inc (rand-int 6))
         tiles (apply vector tiles)
         {ax :x ay :y} (first tiles)]
-    (print ax ay)
     {:pos {:x 600 :y 0}
      :grid-pos nil
      :tiles (doall
@@ -125,6 +124,7 @@
    :interact false
    :title ""
    :time 0
+   :level 1
    :show false
    :menu :main})
 
@@ -375,15 +375,22 @@
     (assoc :show false)
     (assoc :menu menu)))
 
-(defn start-level [state title source]
-  (let [level (parse-game source)]
-    (print level)
-    (->
-      state
-      (assoc :parts (:parts level))
-      (assoc :grid (:grid level))
-      (assoc :title title)
-      (reset-game))))
+(defmulti level-source (fn [n] n))
+
+(defmethod level-source :default [n])
+
+(defn start-level [state n]
+  (let [source (level-source n)
+        title (str "Level " n)
+        level (parse-game source)]
+    (if (not source)
+        (go-menu state :level)
+      (->
+        state
+        (assoc :parts (:parts level))
+        (assoc :grid (:grid level))
+        (assoc :title title)
+        (reset-game)))))
 
 (defmulti render-menu (fn [state] (:menu state)))
 
@@ -408,19 +415,19 @@
      [:div.snowflake "❀"]
      [:div.snowflake "❁"]]]])
 
-(def level1
+(defmethod level-source 1 [n]
 ". A A
   B . A
  . C C")
 
-(def level2
+(defmethod level-source 2 [n]
 ". A . B
   A B B
  . A . B
   . C C")
 
 
-(def level3
+(defmethod level-source 3 [n]
 ". A . B
   A B B C C
  . A D B C
@@ -428,7 +435,7 @@
  . E")
 
 
-(def level4
+(defmethod level-source 4 [n]
 ". . A
   B C C D
  . C . C D
@@ -437,7 +444,7 @@
   . . F F G")
 
 
-(def level5
+(defmethod level-source 5 [n]
 ". . A
   . B B C
  . B D B C
@@ -459,22 +466,22 @@
 	  [:h2 "Worker"]
           [:div {:class "levelscontainer"}
             [:a
-             {:onClick #(swap! game-state start-level "Level 1" level1)}
+             {:onClick #(swap! game-state start-level 1)}
              [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
             [:a
-             {:onClick #(swap! game-state start-level "Level 2" level2)}
+             {:onClick #(swap! game-state start-level 2)}
              [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
           ]
           [:div {:class "levelscontainer"}
             [:a
-             {:onClick #(swap! game-state start-level "Level 3" level3)}
+             {:onClick #(swap! game-state start-level 3)}
              [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
           [:div {:class "levelscontainer"}
             [:a
-             {:onClick #(swap! game-state start-level "Level 4" level4)}
+             {:onClick #(swap! game-state start-level 4)}
              [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
             [:a
-             {:onClick #(swap! game-state start-level "Level 5" level5)}
+             {:onClick #(swap! game-state start-level 5)}
              [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
           ]]
 
@@ -482,14 +489,24 @@
           [:img {:class "beeimg" :src "bee_drone.png"}]
 	  [:h2 "Drone"]
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
-            [:a [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 6)}
+             [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 7)}
+             [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
           ]
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
+            [:a
+             {:onClick #(swap! game-state start-level 8)}
+             [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
-            [:a [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 9)}
+             [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 10)}
+             [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
           ]]
 
           [:div {:class "levelrow"}
@@ -497,70 +514,62 @@
 	  [:h2 "Queen"]
           "\n"
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
-            [:a [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 11)}
+             [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 12)}
+             [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
           ]
           "\n"
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
+            [:a
+             {:onClick #(swap! game-state start-level 13)}
+             [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
           "\n"
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
-            [:a [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 14)}
+             [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level 15)}
+             [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
           ]]]]])
 
+(defn next-level [state]
+  state)
+
 (defmethod render-menu :win [state]
-  [:div.overlay
-   "YOU WIN!"
-   [:index {:type "button" :value "menu" :onClick #(swap! game-state go-menu :main)}]
-   [:index {:type "button" :value "retrt" :onClick #(swap! game-state reset-game)}]
-   [:index {:type "button" :value "next"}]
-   ])
-
-(defn pause-game [state]
-  (if (:interact state)
-    (->
-      state
-      (assoc :interact false)
-      (assoc :menu :pause))
-    state))
-
-(defn unpause-game [state]
-  (if (= (:menu state) :pause)
-    (->
-      state
-      (assoc :interact (not (:won state)))
-      (assoc :menu nil))
-    state))
-
-(defmethod render-menu :pause [state]
-  [:div "PAUSED"
-     [:input {:type "button" :value "Menu" :onClick #(swap! game-state go-menu :level)}]
-     [:input {:type "button" :value "Unpause" :onClick #(swap! game-state unpause-game)}]])
+  [:div.modal
+   [:div {:class "modal-content"}
+     "YOU WIN!"
+     [:div {:class "modal-body aligncenter"}
+       [:h1 "Un-Bee-lievable!"]
+       [:p]
+       [:img {:class "winmodalbutton button" :src "btn_menulg.svg" :onClick #(swap! game-state go-menu :level)}]
+       [:img {:class "winmodalbutton button" :src "btn_next.svg" :onClick #(swap! game-state next-level)}]
+     ]]])
 
 (defn render-game [state]
   (sab/html
     [:div.root
      (render-menu state)
      (if (:show state)
-       [:div.game
-        {:id "gamearea" :style {:transform "scaled(0.5)"}}
+        [:div {:class "gameplaybg fullscreen bg"}
+          [:div.gameplayheadercontainer
+		[:div {:class "gameplayheadercolumn align"}
+			[:img {:class "interfaceicon buttonblack" :src "btn_back.svg" :onClick #(swap! game-state go-menu :level)}]
+			[:img {:class "interfaceicon buttonblack" :src "btn_reset.svg" :onClick #(swap! game-state reset-game)}]
+			[:img {:class "interfaceicon buttonblack" :src "btn_shuffle.svg" :onClick #(swap! game-state shuffle-parts)}]
+			]
+		[:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h1 (:title state)]]
+		[:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h3 (str "Time: " (format-time (:time state)))]]
+	]
+
         [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
-;        [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}
-;                 :onClick #(swap! game-state pause-game)}]
-;        [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}
-;                 :onClick #(swap! game-state reset-game)}]
-;        [:input {:type "button" :value "SHUFF" :style {:height 100 :width 100}
-;                 :onClick #(swap! game-state shuffle-parts)}]
-        [:h1.title (:title state)]
-        [:h4.time (str "Time: " (format-time (:time state)))]
-        [:h4 (str "WON: " (:won state))]
         (doall (map (fn [[k v]] (render-part v k)) (:parts state)))
         (render-grid state)
-        [:div.gridarea {:id "gridarea"}]
-        [:div.partarea {:id "partarea"}]
-        ])
-     ]))
+])]))
 
 (defn renderer [state]
   (.render js/ReactDOM (render-game state) (. js/document (getElementById "app"))))
@@ -574,7 +583,3 @@
 ;TODO
 ;Scaling
 ;Winner screen
-;Make play nice
-;Random grid
-;Random puzzle
-;Random maze/fixed maze

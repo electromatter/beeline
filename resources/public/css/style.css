@@ -32,6 +32,7 @@
 }
 
 .tile > img {
+	z-index: 10;
 	user-select: none;
 	user-drag: none;
 	-moz-user-select: none;
@@ -54,7 +55,7 @@
 }
 
 .gridtile {
-	z-index: -10;
+	z-index: 0;
 	position: absolute;
 	user-select: none;
 	user-drag: none;
@@ -76,6 +77,7 @@
 	width: 50%;
 }
 
+
 /* ------------------------------------------------------------------
 Project: Bee/Line
 Global Game Jam 2019
@@ -94,7 +96,7 @@ html {
 }
 
 body {
-	/*background-image: url("/titlebg.jpg");
+	/*background-image: url("assets/titlebg.jpg");
 	background-size: cover;*/
 /*	font: 400 12px/1.8 "Open Sans", Verdana, sans-serif;*/
 /*	color: #666;*/
@@ -109,7 +111,7 @@ body {
     background-size:cover;
     position: relative;
 	min-height: 100%;
-	z-index: 0;
+	z-index: -1;
 	-webkit-background-size: cover;
 	   -moz-background-size: cover;
 		 -o-background-size: cover;
@@ -118,11 +120,29 @@ body {
 
 .titlebg {
 	background-image: url("/bg-title.jpg");
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
 }
 
 .menubg {
 	background-image: url("/bg-menu.jpg");
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
 }
+
+.gameplaybg {
+	background-image: url("/bg-gameplay.jpg");
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	height: 100vh;
+}
+
 
 .titlecontainer {
 	/*padding: 100px;*/
@@ -131,11 +151,27 @@ body {
 /*   flex-direction: row;*/
    align-items: center;
    justify-content: center;
-flex-flow: column;
+	flex-flow: column;
 }
 
 .aligncenter {
 	text-align: center;
+   justify-content: center;
+   align-items: center;
+}
+
+.alignleft {
+	text-align: left;
+	justify-content: flex-start;
+	padding-left: 25px;
+	align-items: center;
+}
+
+.alignright {
+	text-align: right;
+	justify-content: flex-end;
+	padding-right: 25px;
+	align-items: center;
 }
 
 .logo {
@@ -160,7 +196,7 @@ flex-flow: column;
 }
 
 .levelrow {
-	display: flex;
+   display: flex;
    flex-direction: column;
    flex: 1; 
    align-items: center;
@@ -176,13 +212,48 @@ flex-flow: column;
 	width: 25%;
 }
 
+.gameplayheadercontainer {
+	padding-top: 25px;
+		display: flex;
+   flex-direction: row;
+}
+
+.gameplayheadercolumn {
+   display: flex;
+   flex-direction: row;
+   flex: 1; 
+}
+
 .button {
 	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
+}
+
+.buttonblack {
+	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
+	filter: brightness(0.0);
+}
+
+.winmodalbutton {
+
+	min-width: 100px;
+	max-width: 200px;
+	padding: 0px 10px 10px 10px;
+	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
+
 }
 
 .button:hover {
        /*filter: hue-rotate(90deg);*/
        filter: brightness(0.9);
+       position: relative; 
+             top: 2px;
+
+
+    }
+
+.buttonblack:hover {
+       /*filter: hue-rotate(90deg);*/
+       filter: brightness(0.2);
        position: relative; 
              top: 2px;
 
@@ -196,32 +267,125 @@ flex-flow: column;
 
     }
 
+.buttonblack:active {
+   /*filter: hue-rotate(90deg);*/
+   filter: brightness(0.3);
+   position: relative; 
+         top: 6px;
+
+}
+
 .playbutton {
 	width: 100%;
 
 }
 
-h1, h2 {
+.paintitblack {
+	filter: brightness(0.0);
+}
+
+h1, h2, h3 {
 	font-family: 'Rajdhani', sans-serif;
 	text-transform: uppercase;
 	text-align: center;
 	color: #FFFFFF;
 	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
+	margin: 0;
+}
+
+h3 {
+	font-weight: 300;
+	text-align: right;
+
 }
 
 
 
 
 .beeimg {
+
 	max-width: 50%;
 }
 
 .lvlicon {
 	min-width: 50px;
+	max-width: 100px;
 	padding: 0px 10px 0px 10px;
 	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
 	/*max-width: 100%;*/
 }
+
+.interfaceicon {
+	min-width: 25px;
+	max-width: 50px;
+	padding: 0px 10px 0px 10px;
+	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
+	/*max-width: 100%;*/
+}
+
+
+
+/* ~ ~ POP-UP "YOU WON" MODAL ~ ~ */
+
+/* The Modal (background) */
+.modal {
+  display: block; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+  position: relative;
+  background-color: #000000;
+  opacity:0.7 !important;
+  margin: auto;
+  padding: 100px;
+  border: 0px;
+ /* width: 100%;*/
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+  -webkit-animation-name: animatetop;
+  -webkit-animation-duration: 0.4s;
+  animation-name: animatetop;
+  animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+  from {top:-300px; opacity:0} 
+  to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+  from {top:-300px; opacity:0}
+  to {top:0; opacity:1}
+}
+
+/* The Close Button */
+.close {
+  color: white;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+.modal-body {padding: 2px 16px;}
 
 .snowflake {
 	color: #fff;
