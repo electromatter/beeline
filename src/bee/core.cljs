@@ -421,7 +421,7 @@
         [:img {:class "logo" :src "logo.svg"}]]
     [:div {:class "centeredbuttoncontainer"}
      [:a {:onClick #(do (play-music) (swap! game-state go-menu :level))}
-      [:img {:class "button playbutton" :src "/btn_play.svg"}]]]
+      [:img {:class "button playbutton" :src "btn_play.svg"}]]]
     [:div.snowflakes {:aria-hidden true}
      [:div.snowflake "✿"]
      [:div.snowflake "❀"]

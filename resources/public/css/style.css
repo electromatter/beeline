@@ -131,7 +131,7 @@ body {
 }
 
 .titlebg {
-	background-image: url("/bg-title.jpg");
+	background-image: url("../bg-title.jpg");
         -webkit-background-size: cover;
         -moz-background-size: cover;
         -o-background-size: cover;
@@ -139,7 +139,7 @@ body {
 }
 
 .menubg {
-	background-image: url("/bg-menu.jpg");
+	background-image: url("../bg-menu.jpg");
         -webkit-background-size: cover;
         -moz-background-size: cover;
         -o-background-size: cover;
@@ -147,7 +147,7 @@ body {
 }
 
 .gameplaybg {
-	background-image: url("/bg-gameplay.jpg");
+	background-image: url("../bg-gameplay.jpg");
         -webkit-background-size: cover;
         -moz-background-size: cover;
         -o-background-size: cover;
