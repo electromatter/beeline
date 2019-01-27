@@ -3,3 +3,48 @@
 	background-color: #ff0000;
 	display: inline-block;
 }
+
+.part {
+	display: inline-block;
+	position: absolute;
+	user-select: none;
+	user-drag: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
+.tile {
+	position: absolute;
+	user-select: none;
+	user-drag: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
+.grid {
+	display: inline-block;
+	position: absolute;
+	user-select: none;
+	user-drag: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	top: 0px;
+	left: 0px;
+}
+
+.gridtile {
+	z-index: -10;
+	position: absolute;
+	user-select: none;
+	user-drag: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
