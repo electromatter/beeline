@@ -361,7 +361,9 @@
 ;Reset game
 ;Win screen
 ;Main menu
+;Dragging clamping
 ;Random grid
 ;Random puzzle
 ;Maze
+;Random maze
 ;Standalone/refactoring
