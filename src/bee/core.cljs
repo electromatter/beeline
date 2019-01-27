@@ -564,8 +564,22 @@
   . . . S S T")
 
 (defmethod level-source 14 [n]
-"")
-
+". . A A . . . . B B
+  . . A A . . . . . B . C C
+ D D D . . . . . E E F F
+  .  G . H .. . I . E F
+ . . H H . . . I I
+  . . H . H H J . J
+ . . K K K K L J J
+  .  . M . M M L L
+ . . M M . . N L
+  O . P Q . R . N L
+ . . . Q Q . . N N
+  U V V . Q . . S S
+ U V . V V . . S S T
+  U . . W . . . . T
+ . U W W
+  . W W")
 (defmethod level-source 15 [n]
 ". . A . B B . . O O . . Q
   A A B B . B . N . O P Q Q

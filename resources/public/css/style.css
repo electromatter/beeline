@@ -399,6 +399,8 @@ h3 {
 .modal-body {padding: 2px 16px;}
 
 .gamearea {
+	width: 1500px;
+	left: -400px;
 	position: relative;
 	transform: scale(0.3);
 }
