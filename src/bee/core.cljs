@@ -93,25 +93,6 @@
 
 (def tiles [{:x 0 :y 0} {:x 1 :y 0}])
 
-(defn init-state []
-  {:last-pos {:x 0 :y 0}
-   :dragging false
-   :parts {1 (make-part tiles)
-           2 (make-part tiles)
-           3 (make-part tiles)
-           4 (make-part tiles)
-           5 (make-part tiles)
-           6 (make-part tiles)
-           7 (make-part tiles)
-           8 (make-part tiles)}
-   :grid (make-grid 4 4)
-   :snap nil
-   :won false
-   :interact true
-   :title "0"
-   :time 0
-   :show true})
-
 (defn parse-game
   [source]
   (let [stripped (.replace source (js/RegExp. " ", "g") "")
@@ -122,16 +103,37 @@
                       {:tag ch :x x :y y})
                     (range) line))
                 (range) lines))
-        parts (doall
+        parts (reduce (fn [m [k v]] (assoc m k v)) nil
                 (map (fn [ch]
-                  (map make-part
-                    (filter (fn [tile] (= (:tag tile) ch)) tiles)))
+                  [(keyword ch)
+                   (make-part
+                     (apply vector (filter (fn [tile] (= (:tag tile) ch)) tiles)))])
                   names))
         grid (doall
                (map (fn [tile]
-                    {:x (:x tile) :y (:y tile) :occupied false})
-                  tiles))]
+                    {:pos {:x (:x tile) :y (:y tile)} :occupied false})
+                  (filter (fn [tile] (not (= (:tag tile) "."))) tiles)))]
     {:grid grid :parts parts}))
+
+(def game
+"a a a b
+  a a . b")
+
+(def temp (parse-game game))
+
+(defn init-state []
+  {:last-pos {:x 0 :y 0}
+   :dragging false
+   :parts (:parts temp)
+   :grid (:grid temp)
+   :snap nil
+   :won false
+   :interact true
+   :title "0"
+   :time 0
+   :show true})
+
+(print (init-state))
 
 (defonce game-state
   (atom (init-state)))
