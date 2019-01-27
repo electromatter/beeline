@@ -2,6 +2,9 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <title>Bee/Line - Global Game Jam 2019</title>
+    <meta name="description" content="Bee/Line - Global Game Jam 2019">
+    <meta name="author" content="RVA Game Jams">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <link rel="icon" href="https://clojurescript.org/images/cljs-logo-icon-32.png">
@@ -11,6 +14,24 @@
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
   </head>
   <body>
+    <audio id="sfx_win" preload="auto" controls="none" style="display:none;">
+      <source src="SFX_YOUWIN.wav" type="audio/wav">
+    </audio>
+    <audio id="sfx_back" preload="auto" controls="none" style="display:none;">
+      <source src="SFX_BACK.wav" type="audio/wav">
+    </audio>
+    <audio id="sfx_play" preload="auto" controls="none" style="display:none;">
+      <source src="SFX_PLAY.wav" type="audio/wav">
+    </audio>
+    <audio id="sfx_pickup" preload="auto" controls="none" style="display:none;">
+      <source src="SFX_PICKUP.wav" type="audio/wav">
+    </audio>
+    <audio id="sfx_putdown" preload="auto" controls="none" style="display:none;">
+      <source src="SFX_PUTDOWN.wav" type="audio/wav">
+    </audio>
+    <audio id="music" preload="auto" controls="none" style="display:none;" loop>
+      <source src="MUSIC.wav" type="audio/wav">
+    </audio>
     <div id="app"></div>
     <script src="js/compiled/bee.js" type="text/javascript"></script>
   </body>

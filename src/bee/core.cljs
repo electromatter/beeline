@@ -9,6 +9,10 @@
 
 (enable-console-print!)
 
+(defn play-sound [sound]
+  (if-let [elem (. js/document (getElementById (str "sfx_" sound)))]
+    (.play elem)))
+
 (defn make-pos
   [x y]
   {:x x :y y})
@@ -182,12 +186,14 @@
 (defn update-win
   [state]
   (if (every? #(:occupied %) (:grid state))
-    (->
-      state
-      (assoc :menu :win)
-      (assoc :won true)
-      (assoc :dragging false)
-      (assoc :interact false))
+    (do
+      (if (not (:won state)) (play-sound "win"))
+      (->
+        state
+        (assoc :menu :win)
+        (assoc :won true)
+        (assoc :dragging false)
+        (assoc :interact false)))
     state))
 
 (defn update-grid-marks
@@ -227,6 +233,8 @@
 (defn stop [state e]
   (if (:interact state)
     (let [state (do-snap state)]
+      (if (:dragging state)
+        (play-sound "putdown"))
       (assoc state :dragging false))
     (assoc state :dragging false)))
 
@@ -269,14 +277,16 @@
   (set! (.-onmousemove js/document) #(swap! game-state move %1))
   (set! (.-onmouseup js/document) #(swap! game-state stop %1))
   (if (:interact state)
-    (->
-      state
-      (update-grid-marks tag false)
-      (update-win)
-      (assoc-in [:parts tag :grid-pos] nil)
-      (assoc-in [:last-pos :x] (.-clientX e))
-      (assoc-in [:last-pos :y] (.-clientY e))
-      (assoc :dragging tag))
+    (do
+      (play-sound "pickup")
+      (->
+        state
+        (update-grid-marks tag false)
+        (update-win)
+        (assoc-in [:parts tag :grid-pos] nil)
+        (assoc-in [:last-pos :x] (.-clientX e))
+        (assoc-in [:last-pos :y] (.-clientY e))
+        (assoc :dragging tag)))
     state))
 
 (defn render-tile [tile tag]
@@ -369,6 +379,7 @@
     (assoc :show true)))
 
 (defn go-menu [state menu]
+  (play-sound "back")
   (->
     state
     (assoc :interact false)
@@ -385,6 +396,7 @@
     (if (not source)
         (go-menu state :level)
       (let [level (parse-game source)]
+        (play-sound "play")
       (->
         state
         (assoc :parts (:parts level))
@@ -397,13 +409,18 @@
 
 (defmethod render-menu :default [state])
 
+(defn play-music []
+  (let [music (. js/document (getElementById "music"))]
+    (set! (.-volume music) 0.9)
+    (.play music)))
+
 (defmethod render-menu :main [state]
   [:div {:class "titlebg fullscreenbg"}
     [:div {:class "titlecontainer"}
       [:div {:class "logocontainer"}
         [:img {:class "logo" :src "logo.svg"}]]
     [:div {:class "centeredbuttoncontainer"}
-     [:a {:onClick #(swap! game-state go-menu :level)}
+     [:a {:onClick #(do (play-music) (swap! game-state go-menu :level))}
       [:img {:class "button playbutton" :src "/btn_play.svg"}]]]
     [:div.snowflakes {:aria-hidden true}
      [:div.snowflake "✿"]
@@ -555,6 +572,7 @@
   (sab/html
     [:div.root
      (render-menu state)
+
      (if (:show state)
         [:div {:class "gameplaybg fullscreenbg"}
           [:div.gameplayheadercontainer
@@ -580,7 +598,3 @@
         (renderer n)))
 
 (reset! game-state @game-state)
-
-;TODO
-;Scaling
-;Winner screen

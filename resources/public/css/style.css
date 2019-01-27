@@ -24,6 +24,7 @@
 }
 
 .tile {
+	z-index: 10;
 	position: absolute;
 	user-select: none;
 	user-drag: none;
