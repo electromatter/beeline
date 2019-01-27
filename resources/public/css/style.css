@@ -1,4 +1,10 @@
 /* some style */
+
+.root {
+	height: 100vh;
+	width: 100%;
+}
+
 .box {
 	background-color: #ff0000;
 	display: inline-block;
@@ -207,7 +213,6 @@ h1, h2 {
 
 
 .beeimg {
-
 	max-width: 50%;
 }
 
