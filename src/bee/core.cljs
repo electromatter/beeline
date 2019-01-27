@@ -220,19 +220,23 @@
     (make-pos 1 1)))
 
 (defn move [state e]
-  (let [x (.-clientX e)
-        y (.-clientY e)
-        {sx :x sy :y} (find-scale)
-        dx (/ (- x (get-in state [:last-pos :x])) sx)
-        dy (/ (- y (get-in state [:last-pos :y])) sy)
-        tile (:dragging state)
-        state (->
-                 state
-                 (assoc-in [:last-pos :x] x)
-                 (assoc-in [:last-pos :y] y))]
-    (if tile
-      (drag state tile dx dy)
-      state)))
+  (if (:dragging state)
+    (if (bit-and 1 (.-buttons e))
+      (let [x (.-clientX e)
+            y (.-clientY e)
+            {sx :x sy :y} (find-scale)
+            dx (/ (- x (get-in state [:last-pos :x])) sx)
+            dy (/ (- y (get-in state [:last-pos :y])) sy)
+            tile (:dragging state)
+            state (->
+                     state
+                     (assoc-in [:last-pos :x] x)
+                     (assoc-in [:last-pos :y] y))]
+        (if tile
+          (drag state tile dx dy)
+          state))
+      (stop state e))
+    state))
 
 (defn start [state e tag]
   (set! (.-onmousemove js/document) #(swap! game-state move %1))
@@ -354,12 +358,10 @@
 (reset! game-state (reset-game @game-state))
 
 ;TODO
-;Win screen
 ;Reset game
+;Win screen
 ;Main menu
 ;Random grid
 ;Random puzzle
-;Mouse up on move
-;Time delta
 ;Maze
 ;Standalone/refactoring
