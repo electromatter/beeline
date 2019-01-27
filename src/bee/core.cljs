@@ -471,6 +471,116 @@
   . E H
  . . E")
 
+(defmethod level-source 6 [n]
+". . A . B
+  C D D E B
+ C F . F E
+  C F F G
+ . . H H G")
+
+(defmethod level-source 7 [n]
+". A . B C
+  A A D B . E
+ F G G D D E
+  F . G D . I
+ H H H H I I")
+
+(defmethod level-source 8 [n]
+". . . . B B
+  . A A . C B
+ . D E F F . F
+  H D E G F F
+ . H . E G
+  . . J J
+ . . J . J J
+  . . M K L K
+ . . M . K K
+  . . M M")
+
+(defmethod level-source 9 [n]
+". . A A
+  . B B B
+ . C . . E
+  D C . E E
+ D . C E . F
+  D H . F F .
+ G . H H . I
+  G G . H I
+ J . K K . I
+  J J . M I
+ . . M M")
+
+(defmethod level-source 10 [n]
+". . . A
+  . . A A
+ . . A . A
+  B B C E E
+ . D D C . E
+  D . C F F F
+ . D D F I . H
+  . . F . I J J
+ . . . G G G . J
+  . . . K . K J
+ . . . . K K M
+  . . . . . M
+")
+
+(defmethod level-source 11 [n]
+".   A . B B
+  A A C C . D
+ E E . C C . D
+  E E . . G G
+ F . . H . J
+  F F . . J
+ . . K J J . M
+  . . K . K
+ . . . K K")
+
+(defmethod level-source 12 [n]
+". . A . B
+  . . A B
+ C C . D F F F
+  E D D G . I
+ E . . . G G
+  E H H G . J J
+ . . . H G J . M M
+  . . K H . . M . M
+ . . . K K K . . . M
+  . . L . . N . O O
+ . . . L L L N O")
+
+(defmethod level-source 13 [n]
+". . A B . C C
+  . A . B B . C
+ . A . . D . . C
+  A E E . . F F F
+ . H E . I . G G
+  H . . I J . . L L
+ . H . K K J . L . M M M
+  N N . . P P Q Q . . R
+ . N N . . P P Q . . R
+  . O O O O . Q Q R R
+ . . . . S T T
+  . . . S S T")
+
+(defmethod level-source 14 [n]
+"")
+
+(defmethod level-source 15 [n]
+". . A . B B . . O O . . Q
+  A A B B . B . N . O P Q Q
+ C C . F F . G N . O P R R
+  C C . . G G . N O . R R
+ E . . D . G . . N . D . R
+  E E . . H . . . T . . T T
+ . . E E H . S S . T T T
+  . . I . H H . S U . V
+ . . . I I . . . . U V
+  . . I J . . . . X X
+ . . M . J . . W X . Y
+  . M M J . W W . X X Y
+ K K . . J . . . Z . . Y Y")
+
 (defmethod render-menu :level [state]
   [:div
     {:class "menubg fullscreenbg"}
@@ -585,9 +695,11 @@
 		[:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h3 (str "Time: " (format-time (:time state)))]]
 	]
 
+	[:div.gamearea
         [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
         (doall (map (fn [[k v]] (render-part v k)) (:parts state)))
         (render-grid state)
+	]
 ])]))
 
 (defn renderer [state]
