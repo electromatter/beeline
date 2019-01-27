@@ -25,6 +25,15 @@
 	-ms-user-select: none;
 }
 
+.tile > img {
+	user-select: none;
+	user-drag: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
 .grid {
 	display: inline-block;
 	position: absolute;
@@ -47,4 +56,16 @@
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
+}
+
+.gridarea {
+	display:inline-block;
+	height: 100vh;
+	width: 50%;
+}
+
+.partarea {
+	display:inline-block;
+	height: 100vh;
+	width: 50%;
 }

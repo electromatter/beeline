@@ -54,14 +54,36 @@
 
 (def part (make-part))
 
+(defn init-state []
+  {:last-pos {:x 0 :y 0}
+   :dragging false
+   :parts {1 part
+           2 part
+           3 part
+           4 part
+           5 part
+           6 part
+           7 part
+           8 part
+           }
+   :grid (make-grid 4 4)
+   :snap nil
+   :won false
+   :interact true
+   :title "0"
+   :time 0
+   :show true})
+
 (defonce game-state
-  (atom {
-    :last-pos {:x 0 :y 0}
-    :dragging false
-    :parts {1 part 2 part}
-    :grid (make-grid 2 2)}
-    :snap nil
-    :won false))
+  (atom (init-state)))
+
+(defn timer-tick
+  [state]
+  (if (and (:show state) (not (:won state)))
+    (update state :time inc)
+    state))
+
+(defonce timer (js/setInterval #(swap! game-state timer-tick) 1000))
 
 (defn drag [state tag dx dy]
   (->
@@ -114,6 +136,11 @@
                     {:x (+ gx x) :y (+ gy y)}))
       (:tiles part))))
 
+(defn update-win
+  [state]
+  (let [won (every? #(:occupied %) (:grid state))]
+    (assoc state :won won)))
+
 (defn update-grid-marks
   [state tag occupied]
   (let [tiles (get-in state [:parts tag :tiles])
@@ -128,11 +155,6 @@
                    tile))
              %)))
       state)))
-
-(defn update-win
-  [state]
-  (let [won (every? #(:occupied %) (:grid state))]
-    (assoc state :won won)))
 
 (defn update-snap
   [state grid]
@@ -157,11 +179,18 @@
   (let [state (do-snap state)]
     (assoc state :dragging false)))
 
+(defn find-scale []
+  (if-let [scalebox (js/document.getElementById "scalebox")]
+    (let [rect (.getBoundingClientRect scalebox)]
+      (make-pos (/ (.-width rect) 100) (/ (.-height rect) 100)))
+    (make-pos 1 1)))
+
 (defn move [state e]
   (let [x (.-clientX e)
         y (.-clientY e)
-        dx (- x (get-in state [:last-pos :x]))
-        dy (- y (get-in state [:last-pos :y]))
+        {sx :x sy :y} (find-scale)
+        dx (/ (- x (get-in state [:last-pos :x])) sx)
+        dy (/ (- y (get-in state [:last-pos :y])) sy)
         tile (:dragging state)
         state (->
                  state
@@ -177,6 +206,7 @@
   (->
     state
     (update-grid-marks tag false)
+    (update-win)
     (assoc-in [:parts tag :grid-pos] nil)
     (assoc-in [:last-pos :x] (.-clientX e))
     (assoc-in [:last-pos :y] (.-clientY e))
@@ -184,11 +214,20 @@
 
 (defn render-tile [tile tag]
   (let [{x :x y :y} (tilepos (:pos tile))
-        style (get tile :style 0)]
-    [:img.tile {:src (str "hex" style ".png")
-                :style {:left x :top y}
+        style (get tile :style 0)
+        mapname (str "tile" tag "at" x "x" y)]
+    [:div.tile
+       {:style {:left x :top y}}
+       [:map {:name mapname}
+          [:area {:shape "poly" :coords "-1,106,-1,35,59,0,120,36,120,105,61,139"
                 :onMouseDown #(swap! game-state start %1 tag)
-               }]))
+              }]]
+       [:img {:src (str "hex" style ".png")
+               :useMap (str "#" mapname)
+               }
+       ]
+     ]))
+
 
 (defn render-part [part tag]
   (let [{x :x y :y} (:pos part)]
@@ -211,12 +250,32 @@
   [:div.grid
     (doall (map (partial render-grid-tile state) (:grid state)))])
 
+(defn format-time [sec]
+  (let [[min sec] [(quot sec 60) (rem sec 60)]
+        [hr min] [(quot min 60) (rem min 60)]]
+    (str
+      (if (> hr 0) (str (if (< hr 10) "0") hr ":"))
+      (if (and (> hr 0) (< min 10)) "0") min ":"
+      (if (< sec 10) "0") sec)))
+
 (defn render-game [state]
   (sab/html
-    [:div
-      [:div (str state)]
-      (doall (map (fn [[k v]] (render-part v k)) (:parts state)))
-      (render-grid state)]))
+    [:div.root
+     (if (:show state)
+       [:div.game
+        {:id "gamearea" :style {:transform "scaled(0.5)"}}
+        [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
+        [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}}]
+        [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}}]
+        [:h1.title (:title state)]
+        [:h4.time (str "Time: " (format-time (:time state)))]
+        [:h4 (str "WON: " (:won state))]
+        (doall (map (fn [[k v]] (render-part v k)) (:parts state)))
+        (render-grid state)
+        [:div.gridarea {:id "gridarea"}]
+        [:div.partarea {:id "partarea"}]
+        ])
+     ]))
 
 (defn renderer [state]
   (.render js/ReactDOM (render-game state) (. js/document (getElementById "app"))))
