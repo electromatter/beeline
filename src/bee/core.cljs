@@ -96,7 +96,7 @@
 (defn parse-game
   [source]
   (let [stripped (.replace source (js/RegExp. " ", "g") "")
-        names (set (.replace (.replace stripped "\n" "") "." ""))
+        names (set (filter (fn [c] (not (= c "."))) (.replace (.replace stripped "\n" ""))))
         lines (js->clj (.split stripped "\n"))
         tiles (flatten (map (fn [y line]
                   (map (fn [x ch]
@@ -115,34 +115,20 @@
                   (filter (fn [tile] (not (= (:tag tile) "."))) tiles)))]
     {:grid grid :parts parts}))
 
-(def game
-"a a a b
-  a a . b")
-
-(def temp (parse-game game))
-
 (defn init-state []
   {:last-pos {:x 0 :y 0}
    :dragging false
-   :parts (:parts temp)
-   :grid (:grid temp)
-   :snap nil
+   :parts {}
+   :grid {}
    :won false
-   :interact true
-   :title "0"
+   :interact false
+   :title ""
    :time 0
-   :show true})
+   :show false
+   :menu :main})
 
 (defonce game-state
   (atom (init-state)))
-
-(defn timer-tick
-  [state]
-  (if (and (:show state) (not (:won state)))
-    (update state :time inc)
-    state))
-
-(defonce timer (js/setInterval #(swap! game-state timer-tick) 1000))
 
 (defn drag [state tag dx dy]
   (->
@@ -197,8 +183,14 @@
 
 (defn update-win
   [state]
-  (let [won (every? #(:occupied %) (:grid state))]
-    (assoc state :won won)))
+  (if (every? #(:occupied %) (:grid state))
+    (->
+      state
+      (assoc :menu :win)
+      (assoc :won true)
+      (assoc :dragging false)
+      (assoc :interact false))
+    state))
 
 (defn update-grid-marks
   [state tag occupied]
@@ -235,7 +227,9 @@
       state)))
 
 (defn stop [state e]
-  (let [state (do-snap state)]
+  (if (:interact state)
+    (let [state (do-snap state)]
+      (assoc state :dragging false))
     (assoc state :dragging false)))
 
 (defn find-scale []
@@ -245,35 +239,47 @@
     (make-pos 1 1)))
 
 (defn move [state e]
-  (if (:dragging state)
-    (if (bit-and 1 (.-buttons e))
-      (let [x (.-clientX e)
-            y (.-clientY e)
-            {sx :x sy :y} (find-scale)
-            dx (/ (- x (get-in state [:last-pos :x])) sx)
-            dy (/ (- y (get-in state [:last-pos :y])) sy)
-            tile (:dragging state)
-            state (->
-                     state
-                     (assoc-in [:last-pos :x] x)
-                     (assoc-in [:last-pos :y] y))]
-        (if tile
-          (drag state tile dx dy)
-          state))
-      (stop state e))
+  (if (:interact state)
+    (if (:dragging state)
+      (if (bit-and 1 (.-buttons e))
+        (let [x (.-clientX e)
+              y (.-clientY e)
+              {sx :x sy :y} (find-scale)
+              dx (/ (- x (get-in state [:last-pos :x])) sx)
+              dy (/ (- y (get-in state [:last-pos :y])) sy)
+              tile (:dragging state)
+              state (->
+                       state
+                       (assoc-in [:last-pos :x] x)
+                       (assoc-in [:last-pos :y] y))]
+          (if tile
+            (drag state tile dx dy)
+            state))
+        (stop state e))
+      state)
+    (assoc state :dragging false)))
+
+(defn timer-tick
+  [state]
+  (if (and (:show state) (:interact state) (not (:won state)))
+    (update state :time inc)
     state))
+
+(defonce timer (js/setInterval #(swap! game-state timer-tick) 1000))
 
 (defn start [state e tag]
   (set! (.-onmousemove js/document) #(swap! game-state move %1))
   (set! (.-onmouseup js/document) #(swap! game-state stop %1))
-  (->
-    state
-    (update-grid-marks tag false)
-    (update-win)
-    (assoc-in [:parts tag :grid-pos] nil)
-    (assoc-in [:last-pos :x] (.-clientX e))
-    (assoc-in [:last-pos :y] (.-clientY e))
-    (assoc :dragging tag)))
+  (if (:interact state)
+    (->
+      state
+      (update-grid-marks tag false)
+      (update-win)
+      (assoc-in [:parts tag :grid-pos] nil)
+      (assoc-in [:last-pos :x] (.-clientX e))
+      (assoc-in [:last-pos :y] (.-clientY e))
+      (assoc :dragging tag))
+    state))
 
 (defn render-tile [tile tag]
   (let [{x :x y :y} (tilepos (:pos tile))
@@ -309,9 +315,7 @@
                 :height (:y tile-dim)
                 :id (str "grid" tx "x" ty)
                 :style
-     (cond->
-       {:left x :top y}
-       (= (:snap state) (:pos tile)) (assoc :background-color "#00ff00"))}]))
+       {:left x :top y}}]))
 
 (defn render-grid [state]
   [:div.grid
@@ -358,11 +362,53 @@
   (->
     state
     (unlock-all)
-    (shuffle-parts)))
+    (shuffle-parts)
+    (assoc :dragging false)
+    (assoc :won false)
+    (assoc :interact true)
+    (assoc :time 0)
+    (assoc :menu nil)
+    (assoc :show true)))
+
+(defn go-menu [state menu]
+  (->
+    state
+    (assoc :menu menu)))
+
+(def level1
+"a a a b
+  a a . b
+ c . . d")
+
+(defn start-level [state title source]
+  (let [level (parse-game source)]
+    (->
+      state
+      (assoc :parts (:parts level))
+      (assoc :grid (:grid level))
+      (assoc :title title)
+      (reset-game))))
+
+(defmulti render-menu (fn [state] (:menu state)))
+
+(defmethod render-menu :default [state])
+
+(defmethod render-menu :main [state]
+  [:div [:input {:type "button" :value "PLAY" :onClick #(swap! game-state go-menu :level)}]])
+
+(defmethod render-menu :level [state]
+  [:div [:input {:type "button" :value "LV1" :onClick #(swap! game-state start-level "Level 1" level1)}]])
+
+(defmethod render-menu :win [state]
+  [:div "I AM THE WIN"])
+
+(defmethod render-menu :pause [state]
+  [:div "PAUSED"])
 
 (defn render-game [state]
   (sab/html
     [:div.root
+     (render-menu state)
      (if (:show state)
        [:div.game
         {:id "gamearea" :style {:transform "scaled(0.5)"}}
@@ -389,13 +435,12 @@
   :renderer (fn [_ _ _ n]
         (renderer n)))
 
-(reset! game-state (reset-game @game-state))
+(reset! game-state @game-state)
 
 ;TODO
 ;Reset game
 ;Win screen
 ;Main menu
-;Dragging clamping
 ;Random grid
 ;Random puzzle
 ;Maze
