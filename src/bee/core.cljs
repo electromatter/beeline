@@ -133,8 +133,6 @@
    :time 0
    :show true})
 
-(print (init-state))
-
 (defonce game-state
   (atom (init-state)))
 
@@ -341,18 +339,25 @@
 (defn shuffle-part [state tag]
   (->
     state
-    (update-grid-marks tag false)
-    (assoc-in [:parts tag :grid-pos] nil)
     (assoc-in [:parts tag :pos] (rand-pos shuffle-center shuffle-range))
     (assoc :dragging false)))
 
 (defn shuffle-parts [state]
-  (let [tags (keys (:parts state))]
-    (reduce shuffle-part state tags)))
+  (reduce shuffle-part state (filter (fn [tag] (not (get-in state [:parts tag :grid-pos]))) (keys (:parts state)))))
+
+(defn unlock-part [state tag]
+  (->
+    state
+    (update-grid-marks tag false)
+    (assoc-in [:parts tag :grid-pos] nil)))
+
+(defn unlock-all [state]
+  (reduce unlock-part state (keys (:parts state))))
 
 (defn reset-game [state]
   (->
     state
+    (unlock-all)
     (shuffle-parts)))
 
 (defn render-game [state]
@@ -365,6 +370,8 @@
         [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}}]
         [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}
                  :onClick #(swap! game-state reset-game)}]
+        [:input {:type "button" :value "SHUFF" :style {:height 100 :width 100}
+                 :onClick #(swap! game-state shuffle-parts)}]
         [:h1.title (:title state)]
         [:h4.time (str "Time: " (format-time (:time state)))]
         [:h4 (str "WON: " (:won state))]
