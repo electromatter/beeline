@@ -396,7 +396,23 @@
 (defmethod render-menu :default [state])
 
 (defmethod render-menu :main [state]
-  [:div [:input {:type "button" :value "PLAY" :onClick #(swap! game-state go-menu :level)}]])
+  [:div {:class "titlebg fullscreenbg"}
+    [:div {:class "titlecontainer"}
+      [:div {:class "logocontainer"}
+        [:img {:class "logo" :src "logo.svg"}]]
+    [:div {:class "centeredbuttoncontainer"}
+     [:a {:onClick #(swap! game-state go-menu :level)}
+      [:img {:class "button playbutton" :src "/btn_play.svg"}]]]
+    [:div.snowflakes {:aria-hidden true}
+     [:div.snowflake "✿"]
+     [:div.snowflake "❀"]
+     [:div.snowflake "❁"]
+     [:div.snowflake "✿"]
+     [:div.snowflake "❀"]
+     [:div.snowflake "❁"]
+     [:div.snowflake "✿"]
+     [:div.snowflake "❀"]
+     [:div.snowflake "❁"]]]])
 
 (defmethod render-menu :level [state]
   [:div
