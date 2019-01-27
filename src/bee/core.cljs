@@ -19,6 +19,12 @@
         {x2 :x y2 :y} pos2]
     {:x (+ x1 x2) :y (+ y1 y2)}))
 
+(defn mul-pos
+  [pos1 pos2]
+  (let [{x1 :x y1 :y} pos1
+        {x2 :x y2 :y} pos2]
+    {:x (* x1 x2) :y (* y1 y2)}))
+
 (defn dist
   [pos1 pos2]
   (let [{x1 :x y1 :y} pos1
@@ -27,19 +33,50 @@
         dy (- y2 y1)]
     (js/Math.hypot dx dy)))
 
-(def part-dim {:x 120 :y 140})
+(def tile-dim {:x 120 :y 140})
 
-(def snap-dist (/ (dist part-dim {:x 0 :y 0}) 2))
+(def snap-dist (/ (dist tile-dim {:x 0 :y 0}) 2))
 
 (defn
   make-part
   []
-  {:pos {:x 0 :y 0}
-   :grid-pos nil
-   :tiles [
-     {:style 1 :pos {:x 0 :y 0}}
-     {:style 1 :pos {:x 1 :y 0}}
-   ]})
+  (let [style (inc (rand-int 6))]
+    {:pos {:x 600 :y 0}
+     :grid-pos nil
+     :tiles [
+       {:style style :pos {:x 0 :y 0}}
+       {:style style :pos {:x 1 :y 0}}
+     ]}))
+
+(defn average
+  [& args]
+  (/ (apply + args) (count args)))
+
+(defn average-pos
+  [& args]
+  {:x (apply average (map :x args)) :y (apply average (map :y args))})
+
+(defn tile-center
+  [tile]
+  (mul-pos tile-dim (add-pos (:pos tile) (make-pos 0.5 0.5))))
+
+(defn half-pos
+  [pos]
+  (mul-pos (make-pos 0.5 0.5) pos))
+
+(defn part-center
+  [part]
+  (apply average-pos (map tile-center (:tiles part))))
+
+(defn part-dim
+  [part]
+  (let [min-x (apply min (map #(:x (:pos %)) (:tiles part)))
+        max-x (apply max (map #(:x (:pos %)) (:tiles part)))
+        min-y(apply min (map #(:y (:pos %)) (:tiles part)))
+        max-y (apply max (map #(:y (:pos %)) (:tiles part)))
+        dx (+ (- max-x min-x) 1)
+        dy (+ (- max-y min-y) 1)]
+    (mul-pos tile-dim (make-pos dx dy))))
 
 (defn
   make-grid
@@ -52,20 +89,17 @@
           (range nx)))
       (range ny))))
 
-(def part (make-part))
-
 (defn init-state []
   {:last-pos {:x 0 :y 0}
    :dragging false
-   :parts {1 part
-           2 part
-           3 part
-           4 part
-           5 part
-           6 part
-           7 part
-           8 part
-           }
+   :parts {1 (make-part)
+           2 (make-part)
+           3 (make-part)
+           4 (make-part)
+           5 (make-part)
+           6 (make-part)
+           7 (make-part)
+           8 (make-part)}
    :grid (make-grid 4 4)
    :snap nil
    :won false
@@ -96,8 +130,8 @@
         odd (mod ty 2)
         x (* (+ tx (/ odd 2)))
         y (* ty (/ 3 4))
-        x (* (:x part-dim) x)
-        y (* (:y part-dim) y)]
+        x (* (:x tile-dim) x)
+        y (* (:y tile-dim) y)]
     {:x x :y y}))
 
 (defn nearest-grid [state pos]
@@ -222,8 +256,10 @@
           [:area {:shape "poly" :coords "-1,106,-1,35,59,0,120,36,120,105,61,139"
                 :onMouseDown #(swap! game-state start %1 tag)
               }]]
-       [:img {:src (str "hex" style ".png")
+       [:img {:src (str "hex" style ".svg")
                :useMap (str "#" mapname)
+                :width (:x tile-dim)
+                :height (:y tile-dim)
                }
        ]
      ]))
@@ -239,7 +275,9 @@
 (defn render-grid-tile [state tile]
   (let [{tx :x ty :y} (:pos tile)
         {x :x y :y} (tilepos (:pos tile))]
-    [:img.gridtile {:src (str "hex0.png")
+    [:img.gridtile {:src (str "hex0.svg")
+                :width (:x tile-dim)
+                :height (:y tile-dim)
                 :id (str "grid" tx "x" ty)
                 :style
      (cond->
@@ -258,6 +296,34 @@
       (if (and (> hr 0) (< min 10)) "0") min ":"
       (if (< sec 10) "0") sec)))
 
+(def shuffle-center (make-pos 700 150))
+(def shuffle-range 170)
+
+(defn rand-pos
+  [center dist]
+  (let [a (* 2 js/Math.PI (rand))
+        r (* dist (js/Math.sqrt (rand)))
+        x (+ (:x center) (* r (js/Math.cos a)))
+        y (+ (:y center) (* r (js/Math.sin a)))]
+    {:x x :y y}))
+
+(defn shuffle-part [state tag]
+  (->
+    state
+    (update-grid-marks tag false)
+    (assoc-in [:parts tag :grid-pos] nil)
+    (assoc-in [:parts tag :pos] (rand-pos shuffle-center shuffle-range))
+    (assoc :dragging false)))
+
+(defn shuffle-parts [state]
+  (let [tags (keys (:parts state))]
+    (reduce shuffle-part state tags)))
+
+(defn reset-game [state]
+  (->
+    state
+    (shuffle-parts)))
+
 (defn render-game [state]
   (sab/html
     [:div.root
@@ -266,7 +332,8 @@
         {:id "gamearea" :style {:transform "scaled(0.5)"}}
         [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
         [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}}]
-        [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}}]
+        [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}
+                 :onClick #(swap! game-state reset-game)}]
         [:h1.title (:title state)]
         [:h4.time (str "Time: " (format-time (:time state)))]
         [:h4 (str "WON: " (:won state))]
@@ -284,4 +351,15 @@
   :renderer (fn [_ _ _ n]
         (renderer n)))
 
-(reset! game-state @game-state)
+(reset! game-state (reset-game @game-state))
+
+;TODO
+;Win screen
+;Reset game
+;Main menu
+;Random grid
+;Random puzzle
+;Mouse up on move
+;Time delta
+;Maze
+;Standalone/refactoring
