@@ -337,7 +337,7 @@
       (if (and (> hr 0) (< min 10)) "0") min ":"
       (if (< sec 10) "0") sec)))
 
-(def shuffle-center (make-pos 700 150))
+(def shuffle-center (make-pos 2000 150))
 (def shuffle-range 170)
 
 (defn rand-pos
