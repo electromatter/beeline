@@ -373,6 +373,8 @@
 (defn go-menu [state menu]
   (->
     state
+    (assoc :interact false)
+    (assoc :show false)
     (assoc :menu menu)))
 
 (def level1
@@ -397,13 +399,38 @@
   [:div [:input {:type "button" :value "PLAY" :onClick #(swap! game-state go-menu :level)}]])
 
 (defmethod render-menu :level [state]
-  [:div [:input {:type "button" :value "LV1" :onClick #(swap! game-state start-level "Level 1" level1)}]])
+  [:div
+   {:style {:z-index 100}}
+    [:input {:type "button" :value "back" :onClick #(swap! game-state go-menu :main)}]
+    [:input {:type "button" :value "LV1" :onClick #(swap! game-state start-level "Level 1" level1)}]])
 
 (defmethod render-menu :win [state]
-  [:div "I AM THE WIN"])
+  [:div "YOU WIN!"
+   [:index {:type "button" :value "menu" :onClick #(swap! game-state go-menu :main)}]
+   [:index {:type "button" :value "retrt" :onClick #(swap! game-state reset-game)}]
+   [:index {:type "button" :value "next"}]
+   ])
+
+(defn pause-game [state]
+  (if (:interact state)
+    (->
+      state
+      (assoc :interact false)
+      (assoc :menu :pause))
+    state))
+
+(defn unpause-game [state]
+  (if (= (:menu state) :pause)
+    (->
+      state
+      (assoc :interact (not (:won state)))
+      (assoc :menu nil))
+    state))
 
 (defmethod render-menu :pause [state]
-  [:div "PAUSED"])
+  [:div "PAUSED"
+     [:input {:type "button" :value "Menu" :onClick #(swap! game-state go-menu :level)}]
+     [:input {:type "button" :value "Unpause" :onClick #(swap! game-state unpause-game)}]])
 
 (defn render-game [state]
   (sab/html
@@ -413,7 +440,8 @@
        [:div.game
         {:id "gamearea" :style {:transform "scaled(0.5)"}}
         [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
-        [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}}]
+        [:input {:type "button" :style {:background-image "url('/menu.jpg')" :height 100 :width 100}
+                 :onClick #(swap! game-state pause-game)}]
         [:input {:type "button" :style {:background-image "url('/retry.jpg')" :height 100 :width 100}
                  :onClick #(swap! game-state reset-game)}]
         [:input {:type "button" :value "SHUFF" :style {:height 100 :width 100}
