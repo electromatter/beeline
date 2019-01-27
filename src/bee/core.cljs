@@ -41,14 +41,16 @@
   make-part
   [tiles]
   (let [style (inc (rand-int 6))
-        minx (apply min (map :x tiles))
-        miny (apply min (map :y tiles))]
+        tiles (apply vector tiles)
+        anchor (first tiles)
+        ax (:x anchor)
+        ay (:y anchor)]
     {:pos {:x 600 :y 0}
      :grid-pos nil
      :tiles (doall
               (map (fn [pos]
                   {:style style
-                   :pos {:x (- (:x pos) minx) :y (- (:y pos) miny)}}) tiles))}))
+                   :pos {:x (- (:x pos) ax) :y (- (:y pos) ay)}}) tiles))}))
 
 (defn average
   [& args]
@@ -95,8 +97,8 @@
 
 (defn parse-game
   [source]
-  (let [stripped (.replace source (js/RegExp. " ", "g") "")
-        names (set (filter (fn [c] (not (= c "."))) (.replace (.replace stripped "\n" ""))))
+  (let [stripped (.replace source (js/RegExp. " " "g") "")
+        names (set (filter (fn [c] (not (= c "."))) (.replace (.replace stripped (js/RegExp. "\n" "g") ""))))
         lines (js->clj (.split stripped "\n"))
         tiles (flatten (map (fn [y line]
                   (map (fn [x ch]
@@ -379,6 +381,7 @@
 
 (defn start-level [state title source]
   (let [level (parse-game source)]
+    (print level)
     (->
       state
       (assoc :parts (:parts level))
@@ -409,38 +412,43 @@
      [:div.snowflake "❀"]
      [:div.snowflake "❁"]]]])
 
-(def level1 ".AA.
-B.A
-.CC.")
+(def level1
+". A A
+  B . A
+ . C C")
 
-(def level2 ".A.B
-ABB.
-.A.B
-.CC.")
-
-
-(def level3 ".A.BB..
-ABBCC
-.ADBC.
-EDD..
-.E....")
+(def level2
+". A . B
+  A B B
+ . A . B
+  . C C")
 
 
-(def level4 "..A....
-BCCD...
-.C.CD..
-..EE.D.
-...FFGG
-...FFG.")
+(def level3
+". A . B
+  A B B C C
+ . A D B C
+  E D D
+ . E")
 
 
-(def level5 "..A...
-.BBC..
-BEEFC.
-.EGGFF
-.E.GG.
-..EH..
-..E...")
+(def level4
+". . A
+  B C C D
+ . C . C D
+  . E E . D
+ . . F F G G
+  . . F F G")
+
+
+(def level5
+". . A
+  . B B C
+ . B D B C
+  B E E F C
+ . E G G F F
+  . E H
+ . . E")
 
 (defmethod render-menu :level [state]
   [:div
@@ -454,14 +462,24 @@ BEEFC.
           [:img {:class "beeimg" :src "bee_worker.png"}]
 	  [:h2 "Worker"]
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
-            [:a [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level "Level 1" level1)}
+             [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level "Level 2" level2)}
+             [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
           ]
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
+            [:a
+             {:onClick #(swap! game-state start-level "Level 3" level3)}
+             [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
           [:div {:class "levelscontainer"}
-            [:a [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
-            [:a [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level "Level 4" level4)}
+             [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
+            [:a
+             {:onClick #(swap! game-state start-level "Level 5" level5)}
+             [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
           ]]
 
           [:div {:class "levelrow"}
@@ -558,11 +576,9 @@ BEEFC.
 (reset! game-state @game-state)
 
 ;TODO
-;Reset game
-;Win screen
-;Main menu
+;Scaling
+;Winner screen
 ;Random grid
 ;Random puzzle
-;Maze
-;Random maze
+;Random maze/fixed maze
 ;Standalone/refactoring
