@@ -381,16 +381,17 @@
 
 (defn start-level [state n]
   (let [source (level-source n)
-        title (str "Level " n)
-        level (parse-game source)]
+        title (str "Level " n)]
     (if (not source)
         (go-menu state :level)
+      (let [level (parse-game source)]
       (->
         state
         (assoc :parts (:parts level))
         (assoc :grid (:grid level))
         (assoc :title title)
-        (reset-game)))))
+        (assoc :level n)
+        (reset-game))))))
 
 (defmulti render-menu (fn [state] (:menu state)))
 
@@ -537,7 +538,7 @@
           ]]]]])
 
 (defn next-level [state]
-  state)
+  (start-level state (inc (:level state))))
 
 (defmethod render-menu :win [state]
   [:div.modal
@@ -555,7 +556,7 @@
     [:div.root
      (render-menu state)
      (if (:show state)
-        [:div {:class "gameplaybg fullscreen bg"}
+        [:div {:class "gameplaybg fullscreenbg"}
           [:div.gameplayheadercontainer
 		[:div {:class "gameplayheadercolumn align"}
 			[:img {:class "interfaceicon buttonblack" :src "btn_back.svg" :onClick #(swap! game-state go-menu :level)}]
