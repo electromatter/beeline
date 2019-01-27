@@ -39,14 +39,16 @@
 
 (defn
   make-part
-  []
-  (let [style (inc (rand-int 6))]
+  [tiles]
+  (let [style (inc (rand-int 6))
+        minx (apply min (map :x tiles))
+        miny (apply min (map :y tiles))]
     {:pos {:x 600 :y 0}
      :grid-pos nil
-     :tiles [
-       {:style style :pos {:x 0 :y 0}}
-       {:style style :pos {:x 1 :y 0}}
-     ]}))
+     :tiles (doall
+              (map (fn [pos]
+                  {:style style
+                   :pos {:x (- (:x pos) minx) :y (- (:y pos) miny)}}) tiles))}))
 
 (defn average
   [& args]
@@ -89,17 +91,19 @@
           (range nx)))
       (range ny))))
 
+(def tiles [{:x 0 :y 0} {:x 1 :y 0}])
+
 (defn init-state []
   {:last-pos {:x 0 :y 0}
    :dragging false
-   :parts {1 (make-part)
-           2 (make-part)
-           3 (make-part)
-           4 (make-part)
-           5 (make-part)
-           6 (make-part)
-           7 (make-part)
-           8 (make-part)}
+   :parts {1 (make-part tiles)
+           2 (make-part tiles)
+           3 (make-part tiles)
+           4 (make-part tiles)
+           5 (make-part tiles)
+           6 (make-part tiles)
+           7 (make-part tiles)
+           8 (make-part tiles)}
    :grid (make-grid 4 4)
    :snap nil
    :won false
@@ -107,6 +111,27 @@
    :title "0"
    :time 0
    :show true})
+
+(defn parse-game
+  [source]
+  (let [stripped (.replace source (js/RegExp. " ", "g") "")
+        names (set (.replace (.replace stripped "\n" "") "." ""))
+        lines (js->clj (.split stripped "\n"))
+        tiles (flatten (map (fn [y line]
+                  (map (fn [x ch]
+                      {:tag ch :x x :y y})
+                    (range) line))
+                (range) lines))
+        parts (doall
+                (map (fn [ch]
+                  (map make-part
+                    (filter (fn [tile] (= (:tag tile) ch)) tiles)))
+                  names))
+        grid (doall
+               (map (fn [tile]
+                    {:x (:x tile) :y (:y tile) :occupied false})
+                  tiles))]
+    {:grid grid :parts parts}))
 
 (defonce game-state
   (atom (init-state)))
