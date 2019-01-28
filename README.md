@@ -5,7 +5,7 @@ A simple bee puzzle game for [Global Game Jam 2019](https://globalgamejam.org/20
 ## Team
 
 - [Eric Chai (programming)](http://electromatter.info)
-- [Daniel Davis (music & sound)](http://an0va.com)
+- [Daniel Davis (music & sound)](http://danieldaviswho.com/)
 - [Ruthie Edwards (interface design)](http://ruthieswebsite.com/)
 - [Margaret Karles (level design)](http://www.margaretjkarles.com)
 - [Dalton Zheng (art)](http://daltonzhengart.com)
