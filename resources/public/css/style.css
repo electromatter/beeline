@@ -1,3 +1,26 @@
+/* Font */
+@font-face {
+  font-family: 'Rajdhani';
+  font-style: normal;
+  font-weight: 300;
+  src: local('Rajdhani Light'), local('Rajdhani-Light'), url(../fonts/Rajdhani-Light.woff) format('woff');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Rajdhani';
+  font-style: normal;
+  font-weight: 500;
+  src: local('Rajdhani Medium'), local('Rajdhani-Medium'), url(../fonts/Rajdhani-Medium.woff) format('woff');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Rajdhani';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Rajdhani Bold'), local('Rajdhani-Bold'), url(../fonts/Rajdhani-Bold.woff) format('woff');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* some style */
 
 .root {
@@ -32,6 +55,7 @@
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
+	cursor:move;
 }
 
 .tile > img {
@@ -100,7 +124,7 @@ General Styles
 ------------------------------------------------------------------- */
 
 html {
-	overflow-y: scroll;
+	overflow-y: hidden;
 	overflow-x: hidden;
 	-ms-overflow-style: scrollbar;
 	 height: 100%;
@@ -108,6 +132,7 @@ html {
 }
 
 body {
+	touch-action: none;
 	/*background-image: url("assets/titlebg.jpg");
 	background-size: cover;*/
 /*	font: 400 12px/1.8 "Open Sans", Verdana, sans-serif;*/
@@ -122,7 +147,7 @@ body {
 	background-repeat:no-repeat;
     background-size:cover;
     position: relative;
-	min-height: 100%;
+    height: 100vh;
 	z-index: 0;
 	-webkit-background-size: cover;
 	   -moz-background-size: cover;
