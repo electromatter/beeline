@@ -20,11 +20,21 @@
         {x2 :x y2 :y} pos2]
     {:x (+ x1 x2) :y (+ y1 y2)}))
 
+(defn sub-pos
+  [pos1 pos2]
+  (let [{x1 :x y1 :y} pos1
+        {x2 :x y2 :y} pos2]
+    {:x (- x1 x2) :y (- y1 y2)}))
+
 (defn mul-pos
   [pos1 pos2]
   (let [{x1 :x y1 :y} pos1
         {x2 :x y2 :y} pos2]
     {:x (* x1 x2) :y (* y1 y2)}))
+
+(defn mag
+  [pos]
+  (js/Math.hypot (:x pos) (:y pos)))
 
 (defn dist
   [pos1 pos2]
