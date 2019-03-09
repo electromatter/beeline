@@ -44,18 +44,106 @@
         dy (- y2 y1)]
     (js/Math.hypot dx dy)))
 
-(def tile-dim {:x 120 :y 140})
+(defn make-box [left top right bottom]
+  {:left left :top top :right right :bottom bottom})
 
-(def snap-dist (/ (dist tile-dim {:x 0 :y 0}) 2))
+(defn get-box [id]
+  (if-let [ele (js/document.getElementById id)]
+    (let [rect (.getBoundingClientRect ele)]
+      {:left (.-left rect) :top (.-top rect) :right (.-right rect) :bottom (.-bottom rect)})
+    nil))
+
+(defn shift-box [box pos]
+  (if box
+    (let [{l :left t :top r :right b :bottom} box
+          {x :x y :y} pos]
+      {:left (+ l x) :top (+ t y) :right (+ r x) :bottom (+ b y)})))
+
+(defn scale-box [box scale]
+  (if box
+    (let [{l :left t :top r :right b :bottom} box]
+      {:left (* scale l) :top (* scale t) :right (* scale r) :bottom (* scale b)})))
+
+(defn get-box-rel [boxid relid]
+  (if-let [box (get-box boxid)]
+    (if-let [rel (get-box relid)]
+      (let [{x :left y :top} rel
+            box (shift-box box {:x (- x) :y (- y)})]
+        box))))
+
+(defn box-pos [box]
+  (if (not box)
+    (make-pos 0 0)
+    (let [{x :left y :top} box]
+      (make-pos x y))))
+
+(defn merge-boxes [a b]
+  (if (not a)
+    b
+    (if (not b)
+      a
+      (let [{al :left at :top ar :right ab :bottom} a
+            {bl :left bt :top br :right bb :bottom} b]
+        {:left (min al bl) :top (min ar br) :right (max ar br) :bottom (max ab bb)}))))
+
+(defn mid [& args]
+  (if (not args)
+    0
+    (/ (apply + args) (count args))))
+
+(defn box-center [box]
+  (if (not box)
+    (make-pos 0 0)
+    (let [{l :left t :top r :right b :bottom} box]
+      (make-pos (mid l r) (mid t b)))))
+
+(defn box-dim [box]
+  (if (not box)
+    (make-pos 0 0)
+    (let [{l :left t :top r :right b :bottom} box]
+      (make-pos (- r l) (- b t)))))
+
+(defn fit-box-into-center [box container]
+  (let [{iw :x ih :y} (box-dim box)
+        {cw :x ch :y} (box-dim container)
+        bc (box-center box)
+        {x :x y :y} bc
+        cc (box-center container)]
+    (if (and (> cw iw) (> ch ih))
+      [1 (sub-pos cc bc)]
+      (let [ratio (min (/ cw iw) (/ ch ih))]
+        [ratio (sub-pos cc {:x (* ratio x) :y (* ratio y)})]))))
+
+(def tile-dim {:x 120 :y 140})
+(def snap-dist (/ (mag tile-dim) 2))
+
+(defn min-max-pos [& args]
+  (let [min-x (apply min (map #(:x %) args))
+        max-x (apply max (map #(:x %) args))
+        min-y (apply min (map #(:y %) args))
+        max-y (apply max (map #(:y %) args))]
+    [(make-pos min-x min-y) (make-pos max-x max-y)]))
+
+(defn tilepos [pos]
+  (let [{tx :x ty :y} pos
+        x (* (:x tile-dim) (- tx (/ ty 2)))
+        y (* (/ 3 4) (:y tile-dim) ty)]
+    {:x x :y y}))
 
 (defn
   make-part
   [tiles]
   (let [style (inc (rand-int 6))
         tiles (apply vector tiles)
-        {ax :x ay :y} (first tiles)]
+        {ax :x ay :y} (first tiles)
+        [ln lx] (apply min-max-pos (map tilepos tiles))
+        [rn rx] (apply min-max-pos (map #(add-pos (tilepos %) tile-dim) tiles))
+        [min-pos max-pos] (min-max-pos ln lx rn rx)
+        dim (sub-pos max-pos min-pos)]
     {:pos {:x 600 :y 0}
      :grid-pos nil
+     :z 15
+     :dim dim
      :tiles (doall
               (map (fn [pos]
                   {:style style
@@ -81,16 +169,6 @@
   [part]
   (apply average-pos (map tile-center (:tiles part))))
 
-(defn part-dim
-  [part]
-  (let [min-x (apply min (map #(:x (:pos %)) (:tiles part)))
-        max-x (apply max (map #(:x (:pos %)) (:tiles part)))
-        min-y(apply min (map #(:y (:pos %)) (:tiles part)))
-        max-y (apply max (map #(:y (:pos %)) (:tiles part)))
-        dx (+ (- max-x min-x) 1)
-        dy (+ (- max-y min-y) 1)]
-    (mul-pos tile-dim (make-pos dx dy))))
-
 (defn
   make-grid
   [nx ny]
@@ -102,7 +180,14 @@
           (range nx)))
       (range ny))))
 
-(def tiles [{:x 0 :y 0} {:x 1 :y 0}])
+(defn
+  grid-box
+  [grid]
+  (let [[{l :x  t :y} {r :x b :y}] (apply min-max-pos
+                                     (concat
+                                       (apply min-max-pos (map #(tilepos (:pos %)) grid))
+                                       (apply min-max-pos (map #(add-pos (tilepos (:pos %)) tile-dim) grid))))]
+    {:left l :top t :right r :bottom b}))
 
 (defn parse-game
   [source]
@@ -128,11 +213,18 @@
 
 (defn init-state []
   {:last-pos {:x 0 :y 0}
+   :start-pos {:x 0 :y 0}
    :dragging false
+   :next-z 20
    :parts {}
    :grid {}
+   :box nil
+   :scale 1
+   :grid-pos {:x 0 :y 0}
    :won false
    :interact false
+   :shuffle-center (make-pos 2000 150)
+   :shuffle-range 170
    :title ""
    :time 0
    :level 1
@@ -141,18 +233,6 @@
 
 (defonce game-state
   (atom (init-state)))
-
-(defn drag [state tag dx dy]
-  (->
-    state
-    (update-in [:parts tag :pos :x] #(+ dx %))
-    (update-in [:parts tag :pos :y] #(+ dy %))))
-
-(defn tilepos [pos]
-  (let [{tx :x ty :y} pos
-        x (* (:x tile-dim) (- tx (/ ty 2)))
-        y (* (/ 3 4) (:y tile-dim) ty)]
-    {:x x :y y}))
 
 (defn nearest-grid [state pos]
   (let [near (reduce
@@ -226,6 +306,7 @@
       (assoc-in [:parts tag :grid-pos] (:pos grid))
       (update-grid-marks tag true)
       (assoc-in [:parts tag :pos] (tilepos (:pos grid)))
+      (assoc-in [:parts tag :z] 10)
       (update-win))))
 
 (defn do-snap [state]
@@ -245,68 +326,133 @@
       (assoc state :dragging false))
     (assoc state :dragging false)))
 
-(defn find-scale []
-  (if-let [scalebox (js/document.getElementById "scalebox")]
-    (let [rect (.getBoundingClientRect scalebox)]
-      (make-pos (/ (.-width rect) 100) (/ (.-height rect) 100)))
-    (make-pos 1 1)))
-
-(defn move [state e]
+(defn do-move [state x y]
   (if (:interact state)
     (if (:dragging state)
-      (if (bit-and 1 (.-buttons e))
-        (let [x (.-clientX e)
-              y (.-clientY e)
-              {sx :x sy :y} (find-scale)
-              dx (/ (- x (get-in state [:last-pos :x])) sx)
-              dy (/ (- y (get-in state [:last-pos :y])) sy)
-              tile (:dragging state)
-              state (->
-                       state
-                       (assoc-in [:last-pos :x] x)
-                       (assoc-in [:last-pos :y] y))]
-          (if tile
-            (drag state tile dx dy)
-            state))
-        (stop state e))
+      (let [s (:scale state)
+            dx (/ (- x (get-in state [:start-pos :x])) s)
+            dy (/ (- y (get-in state [:start-pos :y])) s)
+            delta {:x dx :y dy}
+            old (get state :last-pos)
+            tile (:dragging state)]
+        (if tile
+          (assoc-in state [:parts tile :pos] (add-pos old delta))
+          state))
       state)
     (assoc state :dragging false)))
 
+(defn move [state e]
+  (if (bit-and 1 (.-buttons e))
+    (do-move state (.-clientX e) (.-clientY e))
+    (stop state e)))
+
+(defn touch-move [state e]
+  (.preventDefault e)
+  (let [touches (.-touches e)]
+    (if-let [touch (aget touches 0)]
+      (do-move state (.-clientX touch) (.-clientY touch))
+      (stop state nil))))
+
+(def should-play true)
+
+(defn play-music []
+  (let [music (. js/document (getElementById "music"))]
+    (set! (.-volume music) 0.9)
+    (if (and (or (not (.-duration music)) (.-paused music)) should-play)
+      (.play music)
+      (set! should-play false))))
+
 (defn timer-tick
   [state]
+  (play-music)
   (if (and (:show state) (:interact state) (not (:won state)))
     (update state :time inc)
     state))
 
 (defonce timer (js/setInterval #(swap! game-state timer-tick) 1000))
 
+(defonce ev-touch-move (.addEventListener js/document "touchmove" #(do (swap! game-state touch-move %1) (:dragging @game-state)) #js {:passive false}))
+
 (defn start [state e tag]
   (set! (.-onmousemove js/document) #(swap! game-state move %1))
   (set! (.-onmouseup js/document) #(swap! game-state stop %1))
+  (set! (.-ontouchend js/document) #(swap! game-state stop %1))
   (if (:interact state)
-    (do
+    (let [x (.-clientX e)
+          y (.-clientY e)
+          old (get-in state [:parts tag :pos])]
       (play-sound "pickup")
       (->
         state
         (update-grid-marks tag false)
         (update-win)
+        (update :next-z inc)
         (assoc-in [:parts tag :grid-pos] nil)
-        (assoc-in [:last-pos :x] (.-clientX e))
-        (assoc-in [:last-pos :y] (.-clientY e))
+        (assoc-in [:parts tag :z] (:next-z state))
+        (assoc :last-pos old)
+        (assoc-in [:start-pos :x] x)
+        (assoc-in [:start-pos :y] y)
         (assoc :dragging tag)))
     state))
+
+(defn touch-start [state e tag]
+  (if-let [touch (aget (.-touches e) 0)]
+    (start state touch tag)
+    state))
+
+(defn tag-from-id [id]
+  (if (not (= (type id) js/String))
+    nil
+    (let [parts (js->clj (.split id ":"))]
+      (if (not (= (count parts) 2))
+        nil
+        (let [[pre tag] parts]
+          (if (not (= pre "tile"))
+            nil
+            (keyword tag)))))))
+
+(defn false-start [e]
+  (let [x (.-clientX e) y (.-clientY e)]
+    (if (not (:dragging @game-state))
+      (loop [restorers nil prev nil]
+        (let [elem (js/document.elementFromPoint x y)]
+          (if elem
+            (let [old-display (.-style.display elem)
+                  restorer #(set! (.-style.display elem) old-display)
+                  elem-id (.-id elem)
+                  tag (tag-from-id elem-id)]
+              (if (not (= elem prev))
+                (if (not tag)
+                  (do
+                    (set! (.-style.display elem) "none")
+                    (recur (conj restorers restorer) elem))
+                  (do
+                    (doseq [r restorers] (r))
+                    (swap! game-state start e tag)))
+                (doseq [r restorers] (r))))
+            (doseq [r restorers] (r))))))))
+
+(defn false-touch-start [e]
+  (if-let [touch (aget (.-touches e) 0)]
+    (false-start touch)))
 
 (defn render-tile [tile tag]
   (let [{x :x y :y} (tilepos (:pos tile))
         style (get tile :style 0)
         mapname (str "tile" tag "at" (:x (:pos tile)) "x" (:y (:pos tile)))]
     [:div.tile
-       {:style {:left x :top y}}
+       {:style {:left x :top y}
+        :onMouseDown #(false-start %)
+        :onTouchStart #(false-touch-start %)}
        [:map {:name mapname}
           [:area {:shape "poly" :coords "-1,106,-1,35,59,0,120,36,120,105,61,139"
+                :onDragStart #(do (.preventDefault %1) false)
                 :onMouseDown #(swap! game-state start %1 tag)
-              }]]
+                :onTouchStart #(do (swap! game-state touch-start %1 tag) false)
+                :id (str "tile" tag)}]]
        [:img {:src (str "hex" style ".svg")
+               :draggable false
+               :onDragStart #(do (.preventDefault %1) false)
                :useMap (str "#" mapname)
                 :width (:x tile-dim)
                 :height (:y tile-dim)
@@ -318,7 +464,7 @@
 (defn render-part [part tag]
   (let [{x :x y :y} (:pos part)]
     [:div.part
-     {:style {:left x :top y} :key tag}
+     {:style {:left x :top y :zIndex (:z part)} :key tag}
      (doall (map render-tile (:tiles part) (repeat tag)))
     ]))
 
@@ -344,9 +490,6 @@
       (if (and (> hr 0) (< min 10)) "0") min ":"
       (if (< sec 10) "0") sec)))
 
-(def shuffle-center (make-pos 2000 150))
-(def shuffle-range 170)
-
 (defn rand-pos
   [center dist]
   (let [a (* 2 js/Math.PI (rand))
@@ -355,14 +498,32 @@
         y (+ (:y center) (* r (js/Math.sin a)))]
     {:x x :y y}))
 
+(defn update-shuffle [state]
+  (if-let [box (get-box-rel "parts" "gamearea")]
+    (let [{x :x y :y} (:grid-pos state)
+          box (shift-box box {:x (- x) :y (- y)})
+          box (scale-box box (/ 1 (:scale state)))
+          {w :x h :y} (box-dim box)
+          r (/ (min w h) 5)]
+        (->
+          state
+          (assoc :shuffle-center (box-center box))
+          (assoc :shuffle-range r)))
+    state))
+
 (defn shuffle-part [state tag]
-  (->
-    state
-    (assoc-in [:parts tag :pos] (rand-pos shuffle-center shuffle-range))
-    (assoc :dragging false)))
+  (let [shift (mul-pos (get-in state [:parts tag :dim]) (make-pos -0.5 -0.5))
+        r (js/Math.hypot (:x shift) (:y shift))
+        center (add-pos (:shuffle-center state) shift)
+        dist (:shuffle-range state)]
+    (->
+      state
+      (assoc-in [:parts tag :pos] (rand-pos center dist))
+      (assoc :dragging false))))
 
 (defn shuffle-parts [state]
-  (reduce shuffle-part state (filter (fn [tag] (not (get-in state [:parts tag :grid-pos]))) (keys (:parts state)))))
+  (let [state (update-shuffle state)]
+    (reduce shuffle-part state (filter (fn [tag] (not (get-in state [:parts tag :grid-pos]))) (keys (:parts state))))))
 
 (defn unlock-part [state tag]
   (->
@@ -397,29 +558,39 @@
 
 (defmethod level-source :default [n])
 
+(defn fit-level [state]
+  (if-let [box (get-box-rel "grid" "gamearea")]
+    (let [[scale shift] (fit-box-into-center (:box state) box)]
+      (->
+        state
+        (stop nil)
+        (assoc :scale scale)
+        (assoc :grid-pos shift)))
+    state))
+
+(defonce ev-resize (.addEventListener js/window "resize" #(do (swap! game-state fit-level) true)))
+
 (defn start-level [state n]
   (let [source (level-source n)
         title (str "Level " n)]
     (if (not source)
         (go-menu state :level)
-      (let [level (parse-game source)]
+      (let [level (parse-game source)
+            box (grid-box (:grid level))]
         (play-sound "play")
       (->
         state
         (assoc :parts (:parts level))
         (assoc :grid (:grid level))
+        (assoc :box box)
         (assoc :title title)
         (assoc :level n)
+        (fit-level)
         (reset-game))))))
 
 (defmulti render-menu (fn [state] (:menu state)))
 
 (defmethod render-menu :default [state])
-
-(defn play-music []
-  (let [music (. js/document (getElementById "music"))]
-    (set! (.-volume music) 0.9)
-    (.play music)))
 
 (defmethod render-menu :main [state]
   [:div {:class "titlebg fullscreenbg"}
@@ -427,7 +598,7 @@
       [:div {:class "logocontainer"}
         [:img {:class "logo" :src "logo.svg"}]]
     [:div {:class "centeredbuttoncontainer"}
-     [:a {:onClick #(do (play-music) (swap! game-state go-menu :level))}
+     [:a {:onClick #(do (swap! game-state go-menu :level))}
       [:img {:class "button playbutton" :src "btn_play.svg"}]]]
     [:div.snowflakes {:aria-hidden true}
      [:div.snowflake "✿"]
@@ -576,11 +747,11 @@
  D D D . . . . . E E F F
   .  G . H .. . I . E F
  . . H H . . . I I
-  . . H . H H J . J
+  . . H . Z Z J . J
  . . K K K K L J J
-  .  . M . M M L L
- . . M M . . N L
-  O . P Q . R . N L
+  .  . M . L L L L
+ . . M M . . X L
+  O . P Q . R . N N
  . . . Q Q . . N N
   U V V . Q . . S S
  U V . V V . . S S T
@@ -592,7 +763,7 @@
   A A B B . B . N . O P Q Q
  C C . F F . G N . O P R R
   C C . . G G . N O . R R
- E . . D . G . . N . D . R
+ E . . D . G . . N . R . R
   E E . . H . . . T . . T T
  . . E E H . S S . T T T
   . . I . H H . S U . V
@@ -699,29 +870,42 @@
        [:img {:class "winmodalbutton button" :src "btn_next.svg" :onClick #(swap! game-state next-level)}]
      ]]])
 
+(defn render-header [state]
+  [:div.gameplayheadercontainer
+      [:div {:class "gameplayheadercolumn alignleft"}
+              [:img {:class "interfaceicon buttonblack" :src "btn_back.svg" :onClick #(swap! game-state go-menu :level)}]
+              [:img {:class "interfaceicon buttonblack" :src "btn_reset.svg" :onClick #(swap! game-state reset-game)}]
+              [:img {:class "interfaceicon buttonblack" :src "btn_shuffle.svg" :onClick #(swap! game-state shuffle-parts)}]
+              ]
+      [:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h1 (:title state)]]
+      [:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h3 (str "Time: " (format-time (:time state)))]]
+  ])
+
+(defn render-parts [state]
+  (doall (map (fn [[k v]] (render-part v k)) (:parts state))))
+
 (defn render-game [state]
   (sab/html
     [:div.root
      (render-menu state)
-
      (if (:show state)
         [:div {:class "gameplaybg fullscreenbg"}
-          [:div.gameplayheadercontainer
-		[:div {:class "gameplayheadercolumn align"}
-			[:img {:class "interfaceicon buttonblack" :src "btn_back.svg" :onClick #(swap! game-state go-menu :level)}]
-			[:img {:class "interfaceicon buttonblack" :src "btn_reset.svg" :onClick #(swap! game-state reset-game)}]
-			[:img {:class "interfaceicon buttonblack" :src "btn_shuffle.svg" :onClick #(swap! game-state shuffle-parts)}]
-			]
-		[:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h1 (:title state)]]
-		[:div {:class "gameplayheadercolumn aligncenter paintitblack"} [:h3 (str "Time: " (format-time (:time state)))]]
-	]
-
-	[:div.gamearea
-        [:div.scalebox {:id "scalebox" :style {:height "100px" :width "100px"}}]
-        (doall (map (fn [[k v]] (render-part v k)) (:parts state)))
-        (render-grid state)
-	]
-])]))
+          [:div.gameplaycolumn
+           (render-header state)
+           [:div.gamearea
+             [:div {:style {:position "absolute" :left (get-in state [:grid-pos :x]) :top (get-in state [:grid-pos :y])
+                            :transform-origin "top left" :transform (str "scale(" (:scale state ) ")")}}
+               (render-grid state)
+               (render-parts state)]]]])
+     [:div.overlay
+      [:div {:class "gameplaybg fullscreenbg"}
+       [:div.gameplaycolumn
+        (render-header state)
+        [:div.gamearea {:id "gamearea"}
+         [:div.grid {:id "grid"}]
+         [:div.parts {:id "parts"}]]
+        ]]]
+     ]))
 
 (defn renderer [state]
   (.render js/ReactDOM (render-game state) (. js/document (getElementById "app"))))

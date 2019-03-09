@@ -47,7 +47,6 @@
 }
 
 .tile {
-	z-index: 10;
 	position: absolute;
 	user-select: none;
 	user-drag: none;
@@ -55,7 +54,6 @@
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
-	cursor:move;
 }
 
 .tile > img {
@@ -67,9 +65,19 @@
 	-ms-user-select: none;
 }
 
+.parts {
+	display: flex;
+	flex-flow: column nowrap;
+	flex: 1 1;
+	min-width: 200px;
+}
+
 .grid {
-	display: inline-block;
-	position: absolute;
+	display: flex;
+	flex-flow: column nowrap;
+	flex: 1 1;
+	/*position: absolute;*/
+	min-width: 200px;
 	user-select: none;
 	user-drag: none;
 	-moz-user-select: none;
@@ -226,7 +234,7 @@ body {
 
 .levelcolumn {
 	display: flex;
-   flex-direction: row;
+   flex-flow: row wrap;
   /* padding: 50px;*/
 
 }
@@ -250,13 +258,14 @@ body {
 
 .gameplayheadercontainer {
 	padding-top: 25px;
+	padding-bottom: 25px;
 		display: flex;
-   flex-direction: row;
+   flex-flow: row wrap;
 }
 
 .gameplayheadercolumn {
    display: flex;
-   flex-direction: row;
+   flex-flow: row nowrap;
    flex: 1; 
 }
 
@@ -340,20 +349,20 @@ h3 {
 
 .beeimg {
 
-	max-width: 50%;
+	max-width: 40%;
 }
 
 .lvlicon {
-	min-width: 50px;
-	max-width: 100px;
+	min-width: 40px;
+	max-width: 40px;
 	padding: 0px 10px 0px 10px;
 	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
 	/*max-width: 100%;*/
 }
 
 .interfaceicon {
-	min-width: 25px;
-	max-width: 50px;
+	min-width: 40px;
+	max-width: 40px;
 	padding: 0px 10px 0px 10px;
 	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
 	/*max-width: 100%;*/
@@ -424,8 +433,26 @@ h3 {
 .modal-body {padding: 2px 16px;}
 
 .gamearea {
-	width: 1500px;
-	left: -400px;
+	display: flex;
+	flex-flow: row wrap;
+	height: 100%;
+	overflow: hidden;
 	position: relative;
-	transform: scale(0.3);
+}
+
+.gameplaycolumn {
+   min-height: 100%;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+}
+
+.overlay {
+  visibility: hidden;
+  z-index: -100;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
 }
