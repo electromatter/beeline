@@ -594,12 +594,6 @@
 
 (defmethod render-menu :main [state]
   [:div {:class "titlebg fullscreenbg"}
-    [:div {:class "titlecontainer"}
-      [:div {:class "logocontainer"}
-        [:img {:class "logo" :src "logo.svg"}]]
-    [:div {:class "centeredbuttoncontainer"}
-     [:a {:onClick #(do (swap! game-state go-menu :level))}
-      [:img {:class "button playbutton" :src "btn_play.svg"}]]]
     [:div.snowflakes {:aria-hidden true}
      [:div.snowflake "✿"]
      [:div.snowflake "❀"]
@@ -609,7 +603,16 @@
      [:div.snowflake "❁"]
      [:div.snowflake "✿"]
      [:div.snowflake "❀"]
-     [:div.snowflake "❁"]]]])
+     [:div.snowflake "❁"]]
+    [:div {:class "titlecontainer"}
+      [:div {:class "mainrow mainpad"}]
+      [:div {:class "mainrow logocontainer"}
+        [:img {:class "logo" :src "logo.svg"}]]
+      [:div {:class "mainrow mainmid"}]
+      [:div {:class "mainrow centeredbuttoncontainer"}
+        [:img {:class "button playbutton" :src "btn_play.svg"
+               :onClick #(do (swap! game-state go-menu :level))}]]
+      [:div {:class "mainrow mainpad"}]]])
 
 (defmethod level-source 1 [n]
 ". A A
@@ -777,84 +780,72 @@
   [:div
     {:class "menubg fullscreenbg"}
     [:div
-     {:class "menucontainer"}
-	[:div [:h1 "Select Level"]]
+     {:class "levelcol"}
+        [:div {:class "levelrow levelpad"}]
+	[:div {:class "levelrow leveltitle"} [:h1 "Select Level"]]
 
-        [:div {:class "levelcolumn"}
-          [:div {:class "levelrow"}
-          [:img {:class "beeimg" :src "bee_worker.png"}]
-	  [:h2 "Worker"]
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 1)}
-             [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
-            [:a
-             {:onClick #(swap! game-state start-level 2)}
-             [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
+        [:div {:class "levelrow levelitems"}
+          [:div {:class "levelcol"}
+          [:div {:class "levelrow"} [:img {:class "beeimg" :src "bee_worker.png"}]]
+	  [:div {:class "levelrow leveltitle"} [:h2 "Worker"]]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl1.svg"
+                    :onClick #(swap! game-state start-level 1)}]
+             [:img {:class "lvlicon button" :src "ico_lvl2.svg"
+                    :onClick #(swap! game-state start-level 2)}]
           ]
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 3)}
-             [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 4)}
-             [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
-            [:a
-             {:onClick #(swap! game-state start-level 5)}
-             [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl3.svg"
+                    :onClick #(swap! game-state start-level 3)}]
+          ]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl4.svg"
+                    :onClick #(swap! game-state start-level 4)}]
+             [:img {:class "lvlicon button" :src "ico_lvl5.svg"
+                    :onClick #(swap! game-state start-level 5)}]
           ]]
 
-          [:div {:class "levelrow"}
-          [:img {:class "beeimg" :src "bee_drone.png"}]
-	  [:h2 "Drone"]
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 6)}
-             [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
-            [:a
-             {:onClick #(swap! game-state start-level 7)}
-             [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
+          [:div {:class "levelcol"}
+          [:div {:class "levelrow"} [:img {:class "beeimg" :src "bee_drone.png"}]]
+	  [:div {:class "levelrow leveltitle"} [:h2 "Drone"]]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl1.svg"
+                    :onClick #(swap! game-state start-level 6)}]
+             [:img {:class "lvlicon button" :src "ico_lvl2.svg"
+                    :onClick #(swap! game-state start-level 7)}]
           ]
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 8)}
-             [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 9)}
-             [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
-            [:a
-             {:onClick #(swap! game-state start-level 10)}
-             [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl3.svg"
+                    :onClick #(swap! game-state start-level 8)}]
+          ]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl4.svg"
+                    :onClick #(swap! game-state start-level 9)}]
+             [:img {:class "lvlicon button" :src "ico_lvl5.svg"
+                    :onClick #(swap! game-state start-level 10)}]
           ]]
 
-          [:div {:class "levelrow"}
-          [:img {:class "beeimg" :src "bee_queen.png"}]
-	  [:h2 "Queen"]
-          "\n"
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 11)}
-             [:img {:class "lvlicon button" :src "ico_lvl1.svg"}]]
-            [:a
-             {:onClick #(swap! game-state start-level 12)}
-             [:img {:class "lvlicon button" :src "ico_lvl2.svg"}]]
+          [:div {:class "levelcol"}
+          [:div {:class "levelrow"} [:img {:class "beeimg" :src "bee_queen.png"}]]
+	  [:div {:class "levelrow leveltitle"} [:h2 "Queen"]]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl1.svg"
+                    :onClick #(swap! game-state start-level 11)}]
+             [:img {:class "lvlicon button" :src "ico_lvl2.svg"
+                    :onClick #(swap! game-state start-level 12)}]
           ]
-          "\n"
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 13)}
-             [:img {:class "lvlicon button" :src "ico_lvl3.svg"}]]]
-          "\n"
-          [:div {:class "levelscontainer"}
-            [:a
-             {:onClick #(swap! game-state start-level 14)}
-             [:img {:class "lvlicon button" :src "ico_lvl4.svg"}]]
-            [:a
-             {:onClick #(swap! game-state start-level 15)}
-             [:img {:class "lvlicon button" :src "ico_lvl5.svg"}]]
-          ]]]]])
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl3.svg"
+                    :onClick #(swap! game-state start-level 13)}]
+          ]
+          [:div {:class "levelrow levelscontainer"}
+             [:img {:class "lvlicon button" :src "ico_lvl4.svg"
+                    :onClick #(swap! game-state start-level 14)}]
+             [:img {:class "lvlicon button" :src "ico_lvl5.svg"
+                    :onClick #(swap! game-state start-level 15)}]
+          ]]]
+        [:div {:class "levelrow levelpad"}]
+        ]])
 
 (defn next-level [state]
   (start-level state (inc (:level state))))
