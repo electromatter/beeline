@@ -189,13 +189,60 @@ body {
 
 
 .titlecontainer {
-	/*padding: 100px;*/
-	padding-top: 5%;
-	display: flex;
-/*   flex-direction: row;*/
-   align-items: center;
-   justify-content: center;
-	flex-flow: column;
+        display:flex;
+        flex-flow: column nowrap;
+        flex: 1 1 auto;
+        height: 100%;
+        align-content: center;
+	align-items: center;
+        justify-content: center;
+}
+
+.mainrow {
+        display: flex;
+        flex-flow: row nowrap;
+        align-content: center;
+        justify-content: center;
+	width: 100%;
+}
+
+.mainpad {
+        flex: 1 1 auto;
+}
+
+.mainmid {
+        flex: .2 1 auto;
+	max-height: 5em;
+}
+
+.logocontainer {
+        flex: 1 1 auto;
+}
+
+.centeredbuttoncontainer {
+        flex: 1 1 auto;
+}
+
+.mainrow > img {
+	width: 100%;
+}
+
+.logo {
+	max-width: 50em;
+}
+
+img {
+	min-height: 0;
+	min-width: 0;
+}
+
+div {
+	min-height: 0;
+	min-width: 0;
+}
+
+.playbutton {
+	max-width: 25em;
 }
 
 .aligncenter {
@@ -218,18 +265,34 @@ body {
 	align-items: center;
 }
 
-.logo {
-	text-shadow: 2px 2px 2px rgba(0,0,0,0.2);
-}
-
-.logocontainer {
-	width: 50%;
-	
-}
-
-.menucontainer {
-	padding-top: 5%;
+.levelcol {
+        display:flex;
+        flex-flow: column nowrap;
+        flex: 1 1 auto;
+        height: 100%;
+        align-content: center;
+        justify-content: center;
 	align-items: center;
+}
+
+.levelrow {
+        display:flex;
+        flex-direction: row;
+        align-content: center;
+        justify-content: center;
+	flex: 1 1 auto;
+}
+
+.levelpad {
+	flex: 1 1 auto;
+}
+
+.leveltitle {
+	flex: 0 0 auto;
+}
+
+.levelitems {
+	flex: 1 1 auto;
 }
 
 .levelcolumn {
@@ -237,23 +300,6 @@ body {
    flex-flow: row wrap;
   /* padding: 50px;*/
 
-}
-
-.levelrow {
-   display: flex;
-   flex-direction: column;
-   flex: 1; 
-   align-items: center;
-}
-
-.levelscontainer {
-	display: flex;
-   flex-direction: row;
-}
-
-.centeredbuttoncontainer {
-	padding-top: 5%;
-	width: 25%;
 }
 
 .gameplayheadercontainer {
@@ -320,11 +366,6 @@ body {
 
 }
 
-.playbutton {
-	width: 100%;
-
-}
-
 .paintitblack {
 	filter: brightness(0.0);
 }
@@ -348,16 +389,26 @@ h3 {
 
 
 .beeimg {
+	display: block;
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
 
-	max-width: 40%;
+.levelscontainer {
+        display: flex;
+	width: 100%;
+        flex-flow: row nowrap;
+        flex: 1 1 auto;
+        align-content: center;
+        justify-content: center;
 }
 
 .lvlicon {
-	min-width: 40px;
-	max-width: 40px;
-	padding: 0px 10px 0px 10px;
+	/*padding: 0px 10px 0px 10px;*/
+	width: 50%;
 	text-shadow: 2px 2px 2px rgba(0,0,0,0.4);
-	/*max-width: 100%;*/
+	object-fit: contain;
 }
 
 .interfaceicon {
